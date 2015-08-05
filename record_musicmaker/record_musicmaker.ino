@@ -30,16 +30,16 @@
 
 
 // define the pins used
-#define RESET 9      // VS1053 reset pin (output)
-#define CS 10        // VS1053 chip select pin (output)
-#define DCS 8        // VS1053 Data/command select pin (output)
+#define RESET -1      // VS1053 reset pin (output)
+#define CS 7        // VS1053 chip select pin (output)
+#define DCS 6        // VS1053 Data/command select pin (output)
 #define CARDCS 4     // Card chip select pin
 #define DREQ 3       // VS1053 Data request, ideally an Interrupt pin
 
 #define REC_BUTTON 7
 
-//Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(RESET, CS, DCS, DREQ, CARDCS);
-Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(-1, 7, 6, 3, 4);
+Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(RESET, CS, DCS, DREQ, CARDCS);
+//Adafruit_VS1053_FilePlayer musicPlayer = Adafruit_VS1053_FilePlayer(-1, 7, 6, 3, 4);
 
 File recording;  // the file we will save our recording to
 #define RECBUFFSIZE 128  // 64 or 128 bytes.
@@ -57,6 +57,8 @@ void setup() {
     while (1);  // don't do anything more
   }
 
+  // Set volume for left, right channels. lower numbers == louder volume!
+  musicPlayer.setVolume(10,10);
   musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
  
   if (!SD.begin(CARDCS)) {
@@ -67,8 +69,7 @@ void setup() {
   delay(3000);
   Serial.println("SD OK!");
   
-  // Set volume for left, right channels. lower numbers == louder volume!
-  musicPlayer.setVolume(30,30);
+
   
   // when the button is pressed, record!
   pinMode(REC_BUTTON, INPUT);
@@ -88,7 +89,6 @@ void loop() {
     
   Serial.println("Begin loop");
   
-  if (!isRecording /*&& !digitalRead(REC_BUTTON)*/) {
     delay(3000);
     Serial.println("Begin recording");
     isRecording = true;
