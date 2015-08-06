@@ -80,7 +80,6 @@ void setup() {
 
 void loop() {  
   Serial.println("Begin loop");
-  musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
   Serial.println("Begin recording");
    
   // Check if the file exists already
@@ -105,7 +104,9 @@ void loop() {
   musicPlayer.startRecordOgg(true); // use microphone (for linein, pass in 'false')
 
   //wait 5 seconds to collect a 5 seconds recording
-  delay(10000); 
+  delay(5000);
+  saveRecordedData();
+  
   Serial.println("End recording");
   musicPlayer.stopRecordOgg();
   saveRecordedData();
@@ -118,63 +119,63 @@ void loop() {
 uint16_t saveRecordedData() {
   uint16_t written = 0;
   
-  // read how many words are waiting for us
+    // read how many words are waiting for us
   uint16_t wordswaiting = musicPlayer.recordedWordsWaiting();
   
   // try to process 256 words (512 bytes) at a time, for best speed
   while (wordswaiting > 256) {
-      //Serial.print("Waiting: "); Serial.println(wordswaiting);
-      // for example 128 bytes x 4 loops = 512 bytes
-      for (int x=0; x < 512/RECBUFFSIZE; x++) {
-        // fill the buffer!
-        for (uint16_t addr=0; addr < RECBUFFSIZE; addr+=2) {
-          uint16_t t = musicPlayer.recordedReadWord();
-          //Serial.println(t, HEX);
-          recording_buffer[addr] = t >> 8; 
-          recording_buffer[addr+1] = t;
-        }
-        if (! fileHandler.write(recording_buffer, RECBUFFSIZE)) {
-          Serial.print("Couldn't write "); Serial.println(RECBUFFSIZE); 
-          while (1);
-        }
+    //Serial.print("Waiting: "); Serial.println(wordswaiting);
+    // for example 128 bytes x 4 loops = 512 bytes
+    for (int x=0; x < 512/RECBUFFSIZE; x++) {
+      // fill the buffer!
+      for (uint16_t addr=0; addr < RECBUFFSIZE; addr+=2) {
+        uint16_t t = musicPlayer.recordedReadWord();
+        //Serial.println(t, HEX);
+        recording_buffer[addr] = t >> 8; 
+        recording_buffer[addr+1] = t;
       }
-      
-      // flush 512 bytes at a time
-      fileHandler.flush();
-      written += 256;
-      wordswaiting -= 256;
+      if (! fileHandler.write(recording_buffer, RECBUFFSIZE)) {
+            Serial.print("Couldn't write "); Serial.println(RECBUFFSIZE); 
+            while (1);
+      }
+    }
+    // flush 512 bytes at a time
+    fileHandler.flush();
+    written += 256;
+    wordswaiting -= 256;
   }
   
   wordswaiting = musicPlayer.recordedWordsWaiting();
-  Serial.print(wordswaiting); Serial.println(" remaining");
-  // wrapping up the recording!
-  uint16_t addr = 0;
-  for (int x=0; x < wordswaiting-1; x++) {
+    Serial.print(wordswaiting); Serial.println(" remaining");
+    // wrapping up the recording!
+    uint16_t addr = 0;
+    for (int x=0; x < wordswaiting-1; x++) {
       // fill the buffer!
       uint16_t t = musicPlayer.recordedReadWord();
       recording_buffer[addr] = t >> 8; 
       recording_buffer[addr+1] = t;
       if (addr > RECBUFFSIZE) {
           if (! fileHandler.write(recording_buffer, RECBUFFSIZE)) {
-              Serial.println("Couldn't write!");
-              while (1);
+                Serial.println("Couldn't write!");
+                while (1);
           }
           fileHandler.flush();
           addr = 0;
       }
-  }
-  if (addr != 0) {
+    }
+    if (addr != 0) {
       if (!fileHandler.write(recording_buffer, addr)) {
         Serial.println("Couldn't write!"); while (1);
       }
       written += addr;
-  }
-  musicPlayer.sciRead(VS1053_SCI_AICTRL3);
-  if (! (musicPlayer.sciRead(VS1053_SCI_AICTRL3) & _BV(2))) {
-      fileHandler.write(musicPlayer.recordedReadWord() & 0xFF);
-      written++;
-  }
-  fileHandler.flush();
-    
+    }
+    musicPlayer.sciRead(VS1053_SCI_AICTRL3);
+    if (! (musicPlayer.sciRead(VS1053_SCI_AICTRL3) & _BV(2))) {
+       fileHandler.write(musicPlayer.recordedReadWord() & 0xFF);
+       written++;
+    }
+    fileHandler.flush();
+  
+
   return written;
 }
