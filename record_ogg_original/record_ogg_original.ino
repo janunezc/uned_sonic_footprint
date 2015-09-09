@@ -29,11 +29,11 @@
 #include <SD.h>
 
 // define the pins used
-#define RESET 9      // VS1053 reset pin (output)
-#define CS 10        // VS1053 chip select pin (output)
-#define DCS 8        // VS1053 Data/command select pin (output)
-#define CARDCS A0     // Card chip select pin
-#define DREQ A1       // VS1053 Data request, ideally an Interrupt pin
+#define RESET  -1      // VS1053 reset pin (output)                      (in player it is -1 instead of  9)
+#define CS      7      // VS1053 chip select pin (output)                (in player it is  7 instead of 10)
+#define DCS     6      // VS1053 Data/command select pin (output)        (in player it is  6 instead of  8)
+#define CARDCS  4      // Card chip select pin                           (in player it is  4 instead of A0)
+#define DREQ    3     // VS1053 Data request, ideally an Interrupt pin  (in player it is  3 instead of A1)
 
 #define REC_BUTTON 7
 
@@ -45,6 +45,8 @@ uint8_t recording_buffer[RECBUFFSIZE];
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("BEGIN! Waiting for 3 seconds");
+  delay(3000);
   Serial.println("Adafruit VS1053 Ogg Recording Test");
 
   // initialise the music player
